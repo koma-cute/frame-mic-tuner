@@ -38,7 +38,7 @@ add_executable(frame-mic-tuner
   vendor/frame-updater/cpp/update_check.cpp
   # 共通の UI 部品（色・寸法・切り替え・ボタン・カード・一番下の行）
   vendor/frame-ui/cpp/frame_ui.cpp
-  # ささけんのほかの Frame アプリの一覧と、インストーラーを Konsole で開く部品
+  # ささけん＠のほかの Frame アプリの一覧と、インストーラーを Konsole で開く部品
   vendor/frame-apps/cpp/frame_apps.cpp
   vendor/frame-apps/cpp/frame_apps_data.cpp
   vendor/frame-apps/cpp/frame_apps_catalog.cpp
