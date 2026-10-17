@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 (2026-10-17)
 
 - Smaller and a little faster (thanks to @cinnacappu, #3): Release builds use link-time optimization when supported and drop unused code and data (the stripped executable is about 20% smaller), and the panel's Cairo-to-RGBA conversion skips the lookup table for fully opaque or fully transparent pixels (about half the time for an opaque panel on a Frame). The picture is unchanged. `ctest` runs `--self-test` and a new pixel-conversion test (`tests/rgba_test.cpp`); tests are not built for release packages.
 - Japanese UI: the heading of the author's app list now reads 「ささけん＠の Frame アプリ」 (full-width ＠), matching the author's name elsewhere. frame-apps 0.3.2.
+- Log: while you drag a Fine-tune slider, the log now says the current output's settings were "changed in the panel" instead of "changed from outside".
 
 ## 0.3.0 (2026-10-10)
 
