@@ -448,6 +448,7 @@ systemd から起動されたのに、すでに常駐がいるとき（手で起
 | `src/vr_overlay.*` | OpenVR の接続、ダッシュボードのオーバーレイ、イベント、終了処理、`--probe` |
 | `src/vk_texture.*`・`src/draw.*`・`src/json.*` | Vulkan の画像、描画の部品、JSON（同じ作者の別のオーバーレイと共通） |
 | `src/i18n.*`・`src/config.*` | 文言の表（日本語・英語・簡体字中国語）、設定ファイル（言語・タブ・新しい版の確認・出口ごとの設定） |
+| `tests/rgba_test.cpp` | `ctest` の画素の変換のテストと `--benchmark`（リリースの tar.gz には入れない） |
 | `vendor/frame-updater/` | 新しい版の確認と更新（共通のリポジトリからのコピー。直さない） |
 | `vendor/frame-ui/` | 共通の UI 部品（色・寸法・切り替え・ボタン・カード・一番下の行・frame-ui の文言の表）。`sh ../frame-ui/sync.sh .` で写す。直さない |
 | `vendor/frame-apps/` | ささけん＠のほかの Frame アプリの一覧と、インストーラーを Konsole で開く部品（アイコンを含む）。`sh ../frame-apps/sync.sh .` で写す。直さない |
