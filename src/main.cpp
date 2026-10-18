@@ -71,6 +71,7 @@ struct Options {
     int thumbnailSize = 256;       ///< --thumbnail-png で書き出す一辺（px）
     std::string language;          ///< 空でなければ PNG の書き出しで設定の言語の代わりに使う（ja / en）
     bool previewQuit = false;      ///< 「もう一度押すと終了」の状態で描く
+    bool previewLanguageMenu = false;  ///< 言語の一覧を開いた状態で描く
     std::vector<MicCommand> sets;  ///< --set-echo などの書き込み（--print の前に実行する）
     // 見た目の確認用のダミーの状態（どれか 1 つでも付けると、実際の値を読まずにダミーで描く）
     bool fake = false;
@@ -191,7 +192,7 @@ void printUsage() {
         "  --dump-png PATH       OpenVR なしでパネルの画像を PNG に書き出して終わる（今の値で描く）\n"
         "  --thumbnail-png PATH  ダッシュボードのサムネイル（＋のアイコンと同じ絵）を PNG に書き出す\n"
         "      --thumbnail-size N  そのサムネイルの一辺（既定 256）\n"
-        "      --language ja|en|sc  設定の言語の代わりにこの言語で描く\n"
+        "      --language ja|en|sc|de|fr|es|it  設定の言語の代わりにこの言語で描く\n"
         "      --preview-quit    「もう一度押すと終了」の状態で描く\n"
         "      --tab quick|fine  設定のタブの代わりに、このタブ（かんたん / 細かく調整）で描く\n"
         "      --fake            実際の値を読まず、ダミーの状態（スピーカー・使用中）で描く。次の --fake-* も同じ\n"
@@ -210,6 +211,7 @@ void printUsage() {
         "                        installed/checkfailed/installfailed）\n"
         "      --preview-update-confirm  「更新する」を確認の表示にする（--fake-update available と組み合わせる）\n"
         "      --preview-pressed earphone|speaker|record|mute|apps  押している間の見た目\n"
+        "      --preview-language-menu  言語の一覧を開いた見た目\n"
         "      --fake-ns-vad N / --fake-ns-grace N  ダミーのノイズ除去の強さ（既定 23 / 500）\n"
         "      --preview-drag-vad N / --preview-drag-grace N  そのバーを N までドラッグしている見た目\n"
         "      --fake-output speaker|earphones  今の音の出口（Frame のスピーカー / AB13X USB Audio）\n"
@@ -289,11 +291,13 @@ bool parseOptions(int argc, char** argv, Options& options) {
             options.language = argv[++i];
             Language check;
             if (!parseLanguage(options.language, check)) {
-                std::fprintf(stderr, "--language は ja / en / sc です: %s\n", options.language.c_str());
+                std::fprintf(stderr, "--language は ja / en / sc / de / fr / es / it です: %s\n", options.language.c_str());
                 return false;
             }
         } else if (arg == "--preview-quit") {
             options.previewQuit = true;
+        } else if (arg == "--preview-language-menu") {
+            options.previewLanguageMenu = true;
         } else if (arg == "--tab" && hasNext) {
             options.tab = argv[++i];
             if (options.tab != "quick" && options.tab != "fine") {
@@ -1021,6 +1025,7 @@ int runDumpPng(const Options& options) {
             panel.setListScrollForPreview(options.previewScroll == "end" ? 1e9 : std::atof(options.previewScroll.c_str()));
         }
         if (options.previewQuit) panel.armQuitForPreview();
+        if (options.previewLanguageMenu) panel.openLanguageMenuForPreview();
         if (options.previewDrag != PanelAction::None) panel.setDragForPreview(options.previewDrag, options.previewDragValue);
         if (options.previewUpdateConfirm) panel.armUpdateForPreview();
         panel.render(config, model);
@@ -1276,8 +1281,8 @@ int runSelfTest() {
     FontSet fonts;
     fonts.load(kFontPath, kBoldFontPath);
 
-    // 文言の表: 3 つの言語とも、どのフィールドも空でない（表の並びの数の食い違いに気づく）
-    for (const Language language : {Language::Ja, Language::En, Language::Sc}) {
+    // 文言の表: どの言語も、どのフィールドも空でない（表の並びの数の食い違いに気づく）
+    for (const Language language : kLanguages) {
         const UiText& t = uiText(language);
         const char* const* field = reinterpret_cast<const char* const*>(&t);
         bool filled = true;
@@ -1286,6 +1291,9 @@ int runSelfTest() {
         }
         const std::string what = std::string("文言の表: ") + languageCode(language) + " のどのフィールドも空でない";
         expect(what.c_str(), filled);
+        Language parsed = Language::Ja;
+        expect((std::string("言語: ") + languageCode(language) + " を読み直すと同じ").c_str(),
+               parseLanguage(languageCode(language), parsed) && parsed == language && languageEndonym(language)[0] != '\0');
     }
 
     /**
@@ -1371,22 +1379,70 @@ int runSelfTest() {
         expect("更新: 確認の「更新する」で UpdateConfirmYes を返す", second.action == PanelAction::UpdateConfirmYes);
     }
 
-    // ミュート: 「ミュートする」「ミュートを解除」は同じ位置・同じ幅（3 言語とも）。確認なしの 1 回で返す。読めないときは押せない
+    // 言語: 足のドロップダウンを開くと選べて、もう一度押すと閉じる
+    {
+        MicPanel panel(fonts);
+        Config config;
+        PanelModel model = loadedModel(false);
+        panel.render(config, model);
+        double x = 0.0;
+        double y = 0.0;
+        const bool hasMenu = panel.buttonCenter(PanelAction::LanguageMenu, x, y);
+        const PanelHit opened = panel.pointerDown(x, y, 0.0);
+        panel.pointerUp();
+        panel.render(config, model);
+        double dx = 0.0;
+        double dy = 0.0;
+        const bool hasGerman = panel.buttonCenter(PanelAction::LanguagePick, dx, dy, "de");
+        const PanelHit picked = panel.pointerDown(dx, dy, 0.1);
+        panel.pointerUp();
+        panel.render(config, model);
+        expect("言語: メニューを開くと Deutsch を選べる",
+               hasMenu && opened.action == PanelAction::None && hasGerman && picked.action == PanelAction::LanguagePick &&
+                   picked.key == "de");
+        panel.render(config, model);
+        const bool closed = !panel.buttonCenter(PanelAction::LanguagePick, dx, dy, "de");
+        panel.buttonCenter(PanelAction::LanguageMenu, x, y);
+        panel.pointerDown(x, y, 0.2);
+        panel.pointerUp();
+        panel.render(config, model);
+        const bool reopened = panel.buttonCenter(PanelAction::LanguagePick, dx, dy, "de");
+        panel.buttonCenter(PanelAction::LanguageMenu, x, y);
+        panel.pointerDown(x, y, 0.3);
+        panel.pointerUp();
+        panel.render(config, model);
+        expect("言語: もう一度押すと一覧が閉じる", closed && reopened && !panel.buttonCenter(PanelAction::LanguagePick, dx, dy, "de"));
+    }
+
+    // ミュート: 「ミュートする」「ミュートを解除」は同じ位置・同じ幅（どの言語でも）。確認なしの 1 回で返す。読めないときは押せない
     {
         MicPanel panel(fonts);
         Config config;
         PanelModel model = loadedModel(false);
         bool same = true;
-        for (const Language language : {Language::Ja, Language::En, Language::Sc}) {
+        bool fits = true;
+        bool appsSame = true;
+        for (const Language language : kLanguages) {
             config.language = language;
+            // 見出しが入らない言語（スペイン語・イタリア語）は右へずれるので、x 324 は日本語・英語・簡体字中国語で確かめる
+            const bool fixed = language == Language::Ja || language == Language::En || language == Language::Sc;
+            double firstX = -1.0;
             for (const bool muted : {false, true}) {
                 model.state.muted = muted;
                 panel.render(config, model);
                 const frame_ui::Rect r = panel.buttonRect(PanelAction::MuteToggle);
-                same = same && r.x == 324 && r.y == 22 && r.w == 220 && r.h == 56;
+                const frame_ui::Rect apps = panel.buttonRect(PanelAction::ShowApps);
+                if (firstX < 0) firstX = r.x;
+                same = same && (fixed ? r.x == 324 : r.x >= 324) && r.x == firstX && r.y == 22 && r.w == 220 && r.h == 56;
+                fits = fits && apps.w > 0 && r.right() <= apps.x - 12;  // 右の「アプリと更新」に届かない
+                // 「アプリと更新」は右端 1172 のまま。日本語・英語・簡体字中国語は 964, 22, 208×56、ほかは 16px で入る幅まで左へ広がる
+                appsSame = appsSame && std::fabs(apps.right() - 1172) < 0.01 && apps.y == 22 && apps.h == 56 &&
+                           (fixed ? apps.x == 964 && apps.w == 208 : apps.w >= 208);
             }
         }
-        expect("ミュート: ボタンはミュートしてもしなくても、3 言語とも同じ位置・幅（324, 22, 220×56）", same);
+        expect("ミュート: ボタンはミュートしてもしなくても同じ位置・幅（220×56、日本語・英語・簡体字中国語は 324, 22）", same);
+        expect("ミュート: どの言語でもボタンが「アプリと更新」に届かない", fits);
+        expect("アプリと更新: 右端は 1172（日本語・英語・簡体字中国語は 964, 22, 208×56。ほかの言語は幅 208 以上）", appsSame);
         double x = 0.0;
         double y = 0.0;
         panel.buttonCenter(PanelAction::MuteToggle, x, y);
@@ -1974,13 +2030,10 @@ int runOverlay(const Options& options) {
                 std::fprintf(stderr, "[操作] SteamVR と一緒に起動 %s\n", action == PanelAction::AutostartOn ? "オン" : "オフ");
                 worker.request({MicCommand::Kind::SetAutostart, action == PanelAction::AutostartOn});
                 break;
-            case PanelAction::LanguageJa:
-            case PanelAction::LanguageEn:
-            case PanelAction::LanguageSc: {
-                const Language language = action == PanelAction::LanguageJa   ? Language::Ja
-                                          : action == PanelAction::LanguageEn ? Language::En
-                                                                              : Language::Sc;
-                if (language == config.language) break;
+            case PanelAction::LanguageMenu: break;  // 開閉はパネルの中
+            case PanelAction::LanguagePick: {
+                Language language = Language::Ja;
+                if (!parseLanguage(hit.key, language) || language == config.language) break;
                 config.language = language;
                 saveNow();
                 break;
