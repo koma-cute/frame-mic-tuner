@@ -107,7 +107,7 @@ Pour l'enlever : `./install.sh --uninstall`, puis redémarre le casque pour retr
     - Le panneau reste ouvert et continue avec l'ancienne version pendant l'installation. Quand il dit « X is installed. Quit and start the app again to use it », appuie deux fois sur **Quitter** et relance l'app depuis **+** (ou redémarre SteamVR), puis **Ferme** le message s'il est encore là. Si la nouvelle version a changé le script WirePlumber, redémarre aussi le casque (la boîte te le rappelle, et le journal de mise à jour dit s'il a changé).
     - S'il dit « This version can't be installed from here » (la version n'a pas de `SHA256SUMS` ou pas de paquet), mets à jour à la main comme dans Installation ; la boîte montre la page de la version.
     - Si la mise à jour échoue, la boîte prend un cadre rouge, dit pourquoi et que rien n'a changé, et propose **Réessayer** et **Fermer**. Si seule la vérification échoue (par exemple sans réseau), seul le texte devient rouge et **Vérifier** reste.
-    - **Vérifier les mises à jour** marche / arrêt : arrêt stoppe la vérification quotidienne et le téléchargement de la liste d'apps (voir Vie privée).
+    - **Vérifier les mises à jour** oui / non : non arrête la vérification quotidienne et le téléchargement de la liste d'apps (voir Vie privée).
     - **Apps associées** montre frame-aux-shortcuts (bascule le mute du micro avec le bouton aux) avec **Installer** s'il manque. « Apps Frame de sasaken@ » ouvre la liste complète. **Installer** et **Ouvrir l'installateur** montrent d'abord la commande exacte ; **Ouvrir dans Konsole** la lance ensuite dans Konsole, où l'installateur montre sa progression. Pas de sudo ; tout va dans le dossier personnel.
 
 Les réglages sont aussi accessibles en SSH :

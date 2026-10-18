@@ -398,7 +398,7 @@ const UiText kFrench = {
     "Quand l'écoute passe par %s",
     "Écouteurs / casque", "Haut-parleurs Frame",
     "Les sons faibles passent", "Garde le son des haut-parleurs hors du micro",
-    "Annulation d'écho : arrêt", "Annulation d'écho : marche", "Filtre de bruit : arrêt",
+    "Annulation d'écho : non", "Annulation d'écho : oui", "Filtre de bruit : non",
     "%s utilise toujours ce réglage. Il change tout seul quand tu le branches",
     "Les réglages fins sont utilisés pour l'instant",
     "%s est branché, donc son réglage enregistré est actif", "Annuler",
@@ -411,7 +411,7 @@ const UiText kFrench = {
     "L'annulation d'écho et le filtre de bruit ne valent que pour le micro intégré du Frame. Le son de ce micro va aux apps tel quel.",
     "Le réglage pour %1$s (%2$s) s'applique quand tu reviens au micro intégré", "Utiliser le micro intégré",
     // Résumé
-    "Annulation d'écho marche", "Annulation d'écho arrêt", ", filtre de bruit marche", " · ",
+    "Annulation d'écho activée", "Annulation d'écho désactivée", ", filtre de bruit activé", " · ",
     // Chemin
     "Chemin du signal", "Micro", "EQ", "Annulation d'écho", "Filtre de bruit", "Vers les apps", "Inutilisé, les filtres se reposent",
     "Chemin illisible",
@@ -442,7 +442,7 @@ const UiText kFrench = {
     // Apps
     "Cette app", "Bascule l'annulation d'écho et le filtre de bruit du micro",
     "Vérifie GitHub au démarrage et une fois par jour", "Ne vérifie pas tout seul. Utilise « Vérifier »",
-    "Vérifier les mises à jour", "Si c'est arrêté, rien n'est pris sur GitHub ni dans la liste (frame.sasaken1102s.net)",
+    "Vérifier les mises à jour", "Si c'est désactivé, rien n'est pris sur GitHub ni dans la liste (frame.sasaken1102s.net)",
     "Mode d'emploi · signaler un problème",
     "Télécharge et installe la nouvelle version. Quitte et relance l'app pour l'utiliser",
     "%s est installé. Quitte et relance l'app pour l'utiliser",
