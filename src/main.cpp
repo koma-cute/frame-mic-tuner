@@ -1435,14 +1435,16 @@ int runSelfTest() {
                 if (firstX < 0) firstX = r.x;
                 same = same && (fixed ? r.x == 324 : r.x >= 324) && r.x == firstX && r.y == 22 && r.w == 220 && r.h == 56;
                 fits = fits && apps.w > 0 && r.right() <= apps.x - 12;  // 右の「アプリと更新」に届かない
-                // 「アプリと更新」は右端 1172 のまま。日本語・英語・簡体字中国語は 964, 22, 208×56、ほかは 16px で入る幅まで左へ広がる
-                appsSame = appsSame && std::fabs(apps.right() - 1172) < 0.01 && apps.y == 22 && apps.h == 56 &&
-                           (fixed ? apps.x == 964 && apps.w == 208 : apps.w >= 208);
+                // 「アプリと更新」は右端 1372（幅 1400 − 28）のまま。日本語・英語・簡体字中国語は 1164, 22, 208×56、
+                // ほかは 16px で入る幅まで左へ広がる
+                appsSame = appsSame && panel.width() == 1400 && std::fabs(apps.right() - 1372) < 0.01 && apps.y == 22 &&
+                           apps.h == 56 && (fixed ? apps.x == 1164 && apps.w == 208 : apps.w >= 208);
             }
         }
         expect("ミュート: ボタンはミュートしてもしなくても同じ位置・幅（220×56、日本語・英語・簡体字中国語は 324, 22）", same);
         expect("ミュート: どの言語でもボタンが「アプリと更新」に届かない", fits);
-        expect("アプリと更新: 右端は 1172（日本語・英語・簡体字中国語は 964, 22, 208×56。ほかの言語は幅 208 以上）", appsSame);
+        expect("アプリと更新: パネルは幅 1400 で、右端は 1372（日本語・英語・簡体字中国語は 1164, 22, 208×56。ほかの言語は幅 208 以上）",
+               appsSame);
         double x = 0.0;
         double y = 0.0;
         panel.buttonCenter(PanelAction::MuteToggle, x, y);

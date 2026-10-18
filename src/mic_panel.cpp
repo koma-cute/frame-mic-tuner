@@ -1,4 +1,4 @@
-// マイクのパネルの実装。配置は見本（1200×788）のとおり。部品は frame-ui、色は theme.h（frame-ui と同じ）だけを使う。
+// マイクのパネルの実装。配置は見本（1200×788）を横に広げた 1400×788。部品は frame-ui、色は theme.h（frame-ui と同じ）だけを使う。
 #include "mic_panel.h"
 
 #include "draw.h"
@@ -23,43 +23,54 @@ namespace {
 
 using frame_ui::Rect;
 
-constexpr int kWidth = 1200;
+// 16:9 に近い横長（2026-10-18 に 1200×788 から広げた。高さと縦の位置はそのまま）
+constexpr int kWidth = 1400;
 constexpr int kHeight = 788;
+constexpr double kPadX = frame_ui::kPanelPadX;      ///< パネルの左右の余白（28）
+constexpr double kContentRight = kWidth - kPadX;   ///< 中身の右端（1372）
+constexpr double kLeftW = 660;                      ///< 左の列（音の出口・マイクの欄と左のカード）の幅
+constexpr double kRightX = kPadX + kLeftW + 16;     ///< 右の列の左端（704。列の間 16）
+constexpr double kRightW = kContentRight - kRightX; ///< 右の列の幅（668）
 
 // ---- 見出し（状態ラベルとミュートのボタンは幅を決めてあるので、ミュートしても動かない） ----
 // 見出しが縮めても入らない言語（スペイン語・イタリア語）だけ、2 つとも見出しの後ろへずらす（drawHeader）
 constexpr Rect kChipRect {140, 28, 168, 44};
 constexpr Rect kMuteRect {324, 22, 220, 56};
-constexpr Rect kAppsRect {964, 22, 208, 56};
+constexpr Rect kAppsRect {kContentRight - 208, 22, 208, 56};  ///< 右端は中身の右端（1164, 22）
 // ---- マイクの設定 ----
-constexpr Rect kOutputSelect {28, 92, 380, 60};   ///< 「音の出口」の欄
-constexpr Rect kMicSelect {420, 92, 184, 60};     ///< 「マイク」の欄
-constexpr Rect kSettingsCard {28, 168, 576, 492};
-constexpr Rect kTabsRect {50, 188, 532, 56};
-constexpr double kInnerX = 50;                    ///< 左のカードの中身の左端
-constexpr double kInnerRight = 582;               ///< 左のカードの中身の右端
+constexpr Rect kMicSelect {kPadX + kLeftW - 216, 92, 216, 60};          ///< 「マイク」の欄（472。右端は左の列の右端）
+constexpr Rect kOutputSelect {kPadX, 92, kMicSelect.x - 12 - kPadX, 60};  ///< 「音の出口」の欄（幅 432）
+constexpr Rect kSettingsCard {kPadX, 168, kLeftW, 492};
+constexpr double kInnerX = kPadX + 22;               ///< 左のカードの中身の左端（50）
+constexpr double kInnerRight = kPadX + kLeftW - 22;  ///< 左のカードの中身の右端（666）
 constexpr double kInnerW = kInnerRight - kInnerX;
-constexpr Rect kPipelineRect {50, 568, 532, 74};
-constexpr Rect kVoiceCard {620, 92, 552, 568};
-// ---- アプリと更新 ----
-constexpr Rect kAppCard {28, 92, 560, 568};
-constexpr Rect kUpdateBox {50, 244, 516, 112};
-constexpr Rect kRelatedCard {604, 92, 568, 568};
-constexpr Rect kAppsModal {56, 56, 1088, 676};
-constexpr Rect kAppsList {84, 148, 1032, 392};
-constexpr Rect kConfirmCard {260, 150, 680, 476};
+constexpr Rect kTabsRect {kInnerX, 188, kInnerW, 56};
+constexpr Rect kPipelineRect {kInnerX, 568, kInnerW, 74};
+constexpr double kFineToggleX = 250;   ///< 細かく調整: オン / オフの切り替えの左端（左は見出し、右は説明）
+constexpr double kFineToggleW = 210;
+constexpr double kSliderLabelW = 170;  ///< 細かく調整: バーの見出しと説明の幅
+constexpr Rect kVoiceCard {kRightX, 92, kRightW, 568};
+constexpr double kClipLabelW = 300;   ///< 声のチェックの履歴の 2 行目の幅（残りは波形）
+// ---- アプリと更新（カードの左右はマイクの設定の画面の列と同じ） ----
+constexpr Rect kAppCard {kPadX, 92, kLeftW, 568};
+constexpr Rect kUpdateBox {kInnerX, 244, kInnerW, 112};
+constexpr double kUpdateToggleX = 270;  ///< 「新しい版の確認」のオン / オフの左端（左は見出し）
+constexpr Rect kRelatedCard {kRightX, 92, kRightW, 568};
+constexpr Rect kAppsModal {56, 56, kWidth - 112, 676};
+constexpr Rect kAppsList {84, 148, kWidth - 168, 392};
+constexpr Rect kConfirmCard {(kWidth - 680) / 2.0, 150, 680, 476};  ///< 真ん中
 constexpr double kAppRowH = 84;    ///< 一覧のアプリの行の高さ
 constexpr double kAppRowGap = 14;  ///< 一覧のアプリの行の間
-// ---- 一番下の行（frame-ui の drawFooter。部品の行は y 676〜732、注意書きはその下） ----
-constexpr Rect kFooterRect {28, 674, 1144, 88};
+// ---- 一番下の行（部品の行は y 676〜732、注意書きはその下） ----
+constexpr Rect kFooterRect {kPadX, 674, kWidth - 2 * kPadX, 88};
 // ---- 重ねた画面 ----
-constexpr Rect kOutputModal {56, 56, 1088, 676};
-constexpr Rect kOutputList {84, 148, 1032, 484};
-constexpr Rect kMicModal {160, 140, 880, 440};
-constexpr Rect kMicList {188, 240, 824, 312};
+constexpr Rect kOutputModal {56, 56, kWidth - 112, 676};
+constexpr Rect kOutputList {84, 148, kWidth - 168, 484};
+constexpr Rect kMicModal {(kWidth - 880) / 2.0, 140, 880, 440};  ///< 真ん中
+constexpr Rect kMicList {kMicModal.x + 28, 240, kMicModal.w - 56, 312};
 constexpr double kRowH = 76;        ///< 一覧の行の高さ
 constexpr double kRowGap = 8;       ///< 一覧の行の間
-constexpr double kRowButtonW = 196; ///< 行の右のボタン・札の幅
+constexpr double kRowButtonW = 196; ///< 行の右のボタン・札の幅（文字が入らない言語は rowButtonW で 260 まで広げる）
 
 /**
  * 色を frame-ui の色にする（Canvas::text に渡す）。
@@ -750,6 +761,18 @@ std::vector<std::string> wrapBalanced(const frame_ui::Canvas& ui, const std::str
 void drawLines(const frame_ui::Canvas& ui, double x, double firstBaseline, double lineH,
                const std::vector<std::string>& lines, double size, Color c, bool bold = false) {
     for (size_t i = 0; i < lines.size(); ++i) ui.text(x, firstBaseline + lineH * i, lines[i], size, rgb(c), bold);
+}
+
+/**
+ * 重ねた画面の一覧の、行の右のボタン・札の幅（ふだんは kRowButtonW。どれかの文字が入らない言語だけ 260 まで広げる）。
+ * @param ui 描く先（文字を測る）
+ * @param labels その一覧のボタン・札の文字
+ * @return 幅
+ */
+double rowButtonW(const frame_ui::Canvas& ui, std::initializer_list<const char*> labels) {
+    double w = kRowButtonW;
+    for (const char* label : labels) w = std::max(w, ui.measure(label, frame_ui::kControlSize, true) + 40);
+    return std::min(w, 260.0);
 }
 
 /**
@@ -1549,7 +1572,7 @@ void MicPanel::drawFine(const frame_ui::Canvas& ui, const UiText& t, const Panel
         const bool isEcho = row == 0;
         const std::string title = isEcho ? t.rowEcho : t.rowNs;
         // 17px の 1 行に入らない見出し（フランス語・スペイン語・イタリア語のエコー除去）は、長さをそろえた 17px の 2 行にする
-        const double titleRoom = 196 - kInnerX - 8;
+        const double titleRoom = kFineToggleX - kInnerX - 8;
         const double size = ui.fit(title, frame_ui::kLabelSize, 17, titleRoom, true);
         if (ui.measure(title, size, true) <= titleRoom) {
             ui.text(kInnerX, frame_ui::centerBaseline(top, 56, size), title, size, rgb(kText), true);
@@ -1559,18 +1582,19 @@ void MicPanel::drawFine(const frame_ui::Canvas& ui, const UiText& t, const Panel
         }
         const bool value = isEcho ? echo : ns;
         const std::vector<Rect> hits =
-            frame_ui::drawSegmented(ui, {196, top, 210, 56}, {t.on, t.off}, known ? (value ? 0 : 1) : -1);
+            frame_ui::drawSegmented(ui, {kFineToggleX, top, kFineToggleW, 56}, {t.on, t.off}, known ? (value ? 0 : 1) : -1);
         addButton({isEcho ? PanelAction::EchoOn : PanelAction::NsOn}, hits[0]);
         addButton({isEcho ? PanelAction::EchoOff : PanelAction::NsOff}, hits[1]);
-        const std::vector<std::string> lines = wrapText(ui, isEcho ? t.echoHint : t.nsHint, 14, false, kInnerRight - 420, 2);
-        drawLines(ui, 420, top + 28 - (static_cast<double>(lines.size()) - 1) * 10 + 5, 20, lines, 14, kTextMuted);
+        const double hintX = kFineToggleX + kFineToggleW + 14;
+        const std::vector<std::string> lines = wrapText(ui, isEcho ? t.echoHint : t.nsHint, 14, false, kInnerRight - hintX, 2);
+        drawLines(ui, hintX, top + 28 - (static_cast<double>(lines.size()) - 1) * 10 + 5, 20, lines, 14, kTextMuted);
     }
 
     // ノイズ除去の強さのバー 2 本。ノイズ除去がオフの間は効かないので、塗りとつまみを灰色にして説明を替える（押せるまま）
     double vad = 0.0;
     double grace = 0.0;
     displayedNsValues(vad, grace);
-    const double trackX0 = kInnerX + 132 + 14 + 12;
+    const double trackX0 = kInnerX + kSliderLabelW + 2 + 14 + 12;
     const double trackX1 = kInnerRight - 70 - 14 - 12;
     for (int row = 0; row < 2; ++row) {
         const bool isVad = row == 0;
@@ -1581,15 +1605,15 @@ void MicPanel::drawFine(const frame_ui::Canvas& ui, const UiText& t, const Panel
         const double max = isVad ? kNsVadMax : kNsGraceMax;
         const double value = isVad ? vad : grace;
         const std::string title = isVad ? t.nsVad : t.nsGrace;
-        const double titleSize = ui.fit(title, 17, 13, 130, true);
+        const double titleSize = ui.fit(title, 17, 13, kSliderLabelW, true);
         ui.text(kInnerX, top + 21, title, titleSize, rgb(kText), true);
         const std::string hint = (!ns && isVad) ? t.nsInactive : (isVad ? t.nsVadHint : t.nsGraceHint);
         // 説明は 12px（入らなければ 11px まで縮める）の 1 行。11px でも入らない言語は 11px の 2 行にする（下の行・標準の説明とは離れる）
-        const double hintSize = ui.fit(hint, 12, 11, 130);
-        if (ui.measure(hint, hintSize) <= 130) {
+        const double hintSize = ui.fit(hint, 12, 11, kSliderLabelW);
+        if (ui.measure(hint, hintSize) <= kSliderLabelW) {
             ui.text(kInnerX, top + 40, hint, hintSize, rgb(kTextMuted));
         } else {
-            drawLines(ui, kInnerX, top + 37, 13, wrapText(ui, hint, 11, false, 130, 2), 11, kTextMuted);
+            drawLines(ui, kInnerX, top + 37, 13, wrapText(ui, hint, 11, false, kSliderLabelW, 2), 11, kTextMuted);
         }
 
         // 溝・今の値までの塗り・つまみ
@@ -1626,7 +1650,9 @@ void MicPanel::drawFine(const frame_ui::Canvas& ui, const UiText& t, const Panel
     }
 
     // 標準に戻す（SteamOS の既定 23% / 500ms）と、標準の値の説明
-    const Rect reset {424, 514, 158, 44};
+    // ボタンは幅 158。文字が入らない言語（スペイン語など）だけ、入る幅（240 まで）に広げる
+    const double resetW = std::clamp(ui.measure(t.nsReset, frame_ui::kControlSize, true) + 40, 158.0, 240.0);
+    const Rect reset {kInnerRight - resetW, 514, resetW, 44};
     const double noteSize = ui.fit(t.nsDefaultNote, 14, 11, reset.x - kInnerX - 12);
     ui.text(kInnerX, frame_ui::centerBaseline(reset.y, reset.h, noteSize), t.nsDefaultNote, noteSize, rgb(kTextMuted));
     addButton({PanelAction::NsReset}, frame_ui::drawButton(ui, reset, t.nsReset, frame_ui::ButtonKind::Normal, nsParamsKnown));
@@ -1739,7 +1765,9 @@ void MicPanel::drawVoice(const frame_ui::Canvas& ui, const UiText& t, const Voic
     frame_ui::drawCard(ui, card);
     const double x = card.x + frame_ui::kCardPadX;
     const double right = card.right() - frame_ui::kCardPadX;
-    const Rect record {right - 150, 110, 150, 56};
+    // 録音のボタンは幅 150。「録音」「停止」が 21px で入らない言語だけ、入る幅（200 まで）に広げる（録音中も同じ幅）
+    const double recordW = std::clamp(std::max(ui.measure(t.record, 21, true), ui.measure(t.stop, 21, true)) + 60, 150.0, 200.0);
+    const Rect record {right - recordW, 110, recordW, 56};
     ui.text(x, frame_ui::centerBaseline(110, 32, frame_ui::kCardTitleSize), t.voiceTitle,
             ui.fit(t.voiceTitle, frame_ui::kCardTitleSize, 16, record.x - x - 12, true), rgb(kText), true);
     const double hintSize = ui.fit(t.voiceHint, 14, 11, record.x - x - 12);
@@ -1826,7 +1854,7 @@ void MicPanel::drawVoice(const frame_ui::Canvas& ui, const UiText& t, const Voic
 
         // 時刻・長さ（1 行目）と、録ったときの出口と設定（2 行目。例:「AB13X・エコー除去オフ」）
         const double tx = play.right() + 14;
-        const double textW = 176;
+        const double textW = kClipLabelW;
         const double timeW = ui.text(tx, top + 31, clockText(clip.recordedAt), 18, rgb(kText), true);
         char length[32];
         std::snprintf(length, sizeof(length), "%.1f %s", clip.seconds(), t.seconds);
@@ -2020,7 +2048,7 @@ void MicPanel::drawApps(const frame_ui::Canvas& ui, const UiText& t, const Confi
 
     // 新しい版の確認（オン / オフ。オフならアプリの一覧も取りに行かない）
     // 見出しは 16px まで縮めて 1 行。それでも入らない言語（ドイツ語・フランス語・スペイン語・イタリア語）は、長さをそろえた 16px の 2 行
-    const double labelRoom = 216 - x - 10;
+    const double labelRoom = kUpdateToggleX - x - 10;
     const double labelSize = ui.fit(t.rowUpdateCheck, 18, 16, labelRoom, true);
     if (ui.measure(t.rowUpdateCheck, labelSize, true) <= labelRoom) {
         ui.text(x, frame_ui::centerBaseline(380, 56, labelSize), t.rowUpdateCheck, labelSize, rgb(kText), true);
@@ -2028,7 +2056,7 @@ void MicPanel::drawApps(const frame_ui::Canvas& ui, const UiText& t, const Confi
         const std::vector<std::string> lines = wrapBalanced(ui, t.rowUpdateCheck, 16, true, labelRoom);
         drawLines(ui, x, frame_ui::centerBaseline(380, 56, 16) - 9.5, 19, lines, 16, kText, true);
     }
-    const std::vector<Rect> toggle = frame_ui::drawSegmented(ui, {216, 380, 180, 56}, {t.on, t.off}, config.updateCheck ? 0 : 1);
+    const std::vector<Rect> toggle = frame_ui::drawSegmented(ui, {kUpdateToggleX, 380, 180, 56}, {t.on, t.off}, config.updateCheck ? 0 : 1);
     addButton({PanelAction::UpdateCheckOn}, toggle[0]);
     addButton({PanelAction::UpdateCheckOff}, toggle[1]);
     drawLines(ui, x, 446 + 15, 21, wrapText(ui, t.updateCheckNote, 14, false, right - x, 2), 14, kTextMuted);
@@ -2179,8 +2207,13 @@ void MicPanel::drawAppsList(const frame_ui::Canvas& ui, const UiText& t, const C
 
     // 下: 補足と「インストーラーを開く」（メニューの Konsole がまだ開いていれば押せない）
     fillRounded(cr, {kAppsList.x, 556, kAppsList.w, 1}, 0, kDivider);
-    const Rect menu {884, 648, 232, 56};
-    drawLines(ui, kAppsList.x, 574 + 14, 20, wrapText(ui, t.appsListNote, 13, false, 760, 3), 13, kTextMuted);
+    // 幅は 232。文字が入らない言語（ドイツ語など）だけ、入る幅（360 まで）に広げる
+    const double menuW = std::clamp(std::max(ui.measure(t.appsOpenInstaller, frame_ui::kControlSize, true),
+                                             ui.measure(t.appsChipBusy, frame_ui::kControlSize, true)) + 40,
+                                    232.0, 360.0);
+    const Rect menu {kAppsList.right() - menuW, 648, menuW, 56};
+    drawLines(ui, kAppsList.x, 574 + 14, 20, wrapText(ui, t.appsListNote, 13, false, menu.x - 40 - kAppsList.x, 3), 13,
+              kTextMuted);
     const std::string label = model.menuBusy ? t.appsChipBusy : t.appsOpenInstaller;
     addButton({PanelAction::AppsOpenMenu}, frame_ui::drawButton(ui, menu, label, frame_ui::ButtonKind::Normal, !model.menuBusy));
 }
@@ -2248,9 +2281,14 @@ void MicPanel::drawAppsConfirm(const frame_ui::Canvas& ui, const UiText& t, cons
     }
     // やめる・Konsole で開く（同じアプリ・メニューの Konsole がまだ開いていれば開けない）
     const bool busy = unknownKey || (entry == nullptr && model.menuBusy) || (entry != nullptr && entry->busy);
-    addButton({PanelAction::AppsConfirmCancel}, frame_ui::drawButton(ui, {560, 544, 150, 56}, t.appsConfirmCancel));
+    // 右下（カードの右の余白 30、間 14）。幅は 150・186、文字が入らない言語だけ入る幅に広げる
+    const double launchW = std::clamp(ui.measure(t.appsConfirmLaunch, frame_ui::kControlSize, true) + 40, 186.0, 260.0);
+    const double cancelW = std::clamp(ui.measure(t.appsConfirmCancel, frame_ui::kControlSize, true) + 40, 150.0, 200.0);
+    const Rect launch {card.right() - 30 - launchW, 544, launchW, 56};
+    const Rect cancel {launch.x - 14 - cancelW, 544, cancelW, 56};
+    addButton({PanelAction::AppsConfirmCancel}, frame_ui::drawButton(ui, cancel, t.appsConfirmCancel));
     addButton({PanelAction::AppsConfirmLaunch, 0, confirmKey_},
-              frame_ui::drawButton(ui, {724, 544, 186, 56}, t.appsConfirmLaunch, frame_ui::ButtonKind::Primary, !busy));
+              frame_ui::drawButton(ui, launch, t.appsConfirmLaunch, frame_ui::ButtonKind::Primary, !busy));
 }
 
 // ============================================================================
@@ -2439,6 +2477,7 @@ void MicPanel::drawOutputPicker(const frame_ui::Canvas& ui, const UiText& t, con
         items.push_back({false, false, &entries[i]});
     }
     const auto itemH = [](const Item& item) { return item.header ? (item.firstHeader ? 30.0 : 38.0) : kRowH; };
+    const double buttonW = rowButtonW(ui, {t.useOutput, t.forget});
     double contentH = 0;
     for (const Item& item : items) contentH += itemH(item) + kRowGap;
     if (!items.empty()) contentH -= kRowGap;
@@ -2463,14 +2502,14 @@ void MicPanel::drawOutputPicker(const frame_ui::Canvas& ui, const UiText& t, con
         const OutputEntry& e = *item.entry;
         const Rect row {kOutputList.x, y, kOutputList.w, kRowH};
         const bool viewing = e.key == viewedKey_;
-        const Rect button {row.right() - 12 - kRowButtonW, y + (kRowH - 56) / 2, kRowButtonW, 56};
+        const Rect button {row.right() - 12 - buttonW, y + (kRowH - 56) / 2, buttonW, 56};
         const Rect rowArea {row.x, row.y, button.x - 12 - row.x, row.h};
         const int l = look(rowArea);
         fillRounded(cr, row, 16, viewing ? kRowSelected : (l == 2 ? kControlDown : (l == 1 ? kControl : kInset)));
         if (viewing) strokeRounded(cr, row, 16, kAccent, 2);
         // 右: ここから音を出す / いま使用中 / 忘れる
         if (e.active) {
-            const Rect chip {button.x, y + (kRowH - 44) / 2, kRowButtonW, 44};
+            const Rect chip {button.x, y + (kRowH - 44) / 2, buttonW, 44};
             fillRounded(cr, chip, 22, kSuccessTint);
             const double size = ui.fit(t.statusActive, 16, 12, chip.w - 48, true);
             const double w = 12 + 8 + ui.measure(t.statusActive, size, true);
@@ -2533,6 +2572,7 @@ void MicPanel::drawMicPicker(const frame_ui::Canvas& ui, const UiText& t, const 
     drawModal(ui, kMicModal, t.micPickerTitle, t.micPickerSub);
     const AudioDevices& devices = model.state.devices;
     const double contentH = devices.inputs.empty() ? 0 : devices.inputs.size() * (kRowH + kRowGap) - kRowGap;
+    const double buttonW = rowButtonW(ui, {t.useMic});
     beginList(kMicList, contentH);
     if (devices.inputs.empty()) ui.text(kMicList.x, kMicList.y + 30, t.loading, 16, rgb(kTextMuted));
     cairo_save(cr);
@@ -2547,7 +2587,7 @@ void MicPanel::drawMicPicker(const frame_ui::Canvas& ui, const UiText& t, const 
             fillRounded(cr, {row.x + 14, cy - 22, 44, 44}, 11, kIconBox);
             drawMicIcon(cr, row.x + 14 + 11, cy - 11, 22, kText, false);
             const bool builtin = isBuiltinMic(e.key);
-            const Rect button {row.right() - 12 - kRowButtonW, y + (kRowH - 56) / 2, kRowButtonW, 56};
+            const Rect button {row.right() - 12 - buttonW, y + (kRowH - 56) / 2, buttonW, 56};
             const double textX = row.x + 14 + 44 + 14;
             const double room = button.x - 16 - textX;
             const std::string name = builtin ? std::string(t.builtinMicName) : format1(t.micOfFormat, e.name);
@@ -2556,7 +2596,7 @@ void MicPanel::drawMicPicker(const frame_ui::Canvas& ui, const UiText& t, const 
             const std::string note = builtin ? t.micNoteBuiltin : t.micNoteExternal;
             ui.text(textX, cy + 22, ui.ellipsize(note, 14, room), 14, rgb(kTextMuted));
             if (e.key == devices.defaultInputKey) {
-                const Rect chip {button.x, y + (kRowH - 44) / 2, kRowButtonW, 44};
+                const Rect chip {button.x, y + (kRowH - 44) / 2, buttonW, 44};
                 fillRounded(cr, chip, 22, kSuccessTint);
                 const double size = ui.fit(t.statusActive, 16, 12, chip.w - 48, true);
                 const double w = 12 + 8 + ui.measure(t.statusActive, size, true);

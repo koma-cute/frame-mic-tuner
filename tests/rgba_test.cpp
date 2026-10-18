@@ -107,7 +107,7 @@ void pixels() {
 
 void benchmark() {
     const char* const kinds[] = {"opaque", "translucent", "opaque-with-edges", "transparent", "random-premultiplied"};
-    for (const auto& dimensions : {std::pair<int, int>{256, 256}, {1200, 788}}) {
+    for (const auto& dimensions : {std::pair<int, int>{256, 256}, {1400, 788}}) {
         for (int kind = 0; kind < 5; ++kind) {
             const int width = dimensions.first, height = dimensions.second;
             cairo_surface_t* image = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);

@@ -19,8 +19,9 @@ namespace {
 
 constexpr const char* kDashboardKey = "sasaken.frame-mic-tuner";
 constexpr const char* kDashboardName = "Mic";
-// 1200px を 2.8m に（1px あたりの大きさは v2 の 1024px / 2.4m とほぼ同じ。高さは約 1.52m）
-constexpr float kDashboardWidthM = 2.8f;
+// パネルの 1px の幅（1200px を 2.8m に出していたときと同じ。約 429px/m で、v2 の 1024px / 2.4m ともほぼ同じ）。
+// 幅はパネルの px から決める: 1400×788 なら幅約 3.27m・高さ約 1.84m
+constexpr float kDashboardMetersPerPx = 2.8f / 1200.0f;
 // 終了時、オーバーレイを消してから VR_Shutdown まで待つ時間（90Hz で約 36 フレーム）
 constexpr int kShutdownWaitMs = 400;
 
@@ -152,7 +153,7 @@ bool VrOverlay::createDashboardOverlay(std::string& message) {
     dashboardHandle_ = main;
     thumbnailHandle_ = thumbnail;
 
-    checkOverlay("SetOverlayWidthInMeters", overlay->SetOverlayWidthInMeters(main, kDashboardWidthM));
+    checkOverlay("SetOverlayWidthInMeters", overlay->SetOverlayWidthInMeters(main, panelWidth_ * kDashboardMetersPerPx));
     checkOverlay("SetOverlayInputMethod", overlay->SetOverlayInputMethod(main, vr::VROverlayInputMethod_Mouse));
     // マウス座標を画像の px にそろえる
     const vr::HmdVector2_t scale = {{static_cast<float>(panelWidth_), static_cast<float>(panelHeight_)}};
