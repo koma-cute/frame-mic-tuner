@@ -3,7 +3,7 @@
 #   scripts/package.sh   → dist/frame-mic-tuner-<バージョン>.tar.gz, dist/SHA256SUMS
 # 中身: 実行ファイル、install.sh（tar.gz からならビルドせずそのまま入れられる）、vendor/frame-updater/frame-update.sh
 # （install.sh が ~/.local/share/frame-mic-tuner/ に置く更新スクリプト）、contrib（WirePlumber・.desktop・.service・
-# アイコン・設定の例）、README・CHANGELOG・LICENSE など。CMakeLists.txt や src/ は入れない
+# アイコン・設定の例）、README（7 言語）・CHANGELOG・LICENSE など。CMakeLists.txt や src/ は入れない
 # （install.sh はそれが無ければ「tar.gz から」と見なし、ビルドをせずに入れる）。
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -40,7 +40,7 @@ mkdir -p "$root/contrib/icons" "$root/contrib/wireplumber" "$root/vendor/frame-u
 install -m755 "$build_dir/$name" "$root/$name"
 strip "$root/$name"
 install -m755 install.sh "$root/"
-install -m644 LICENSE THIRD_PARTY_LICENSES.md README.md README.ja.md CHANGELOG.md "$root/"
+install -m644 LICENSE THIRD_PARTY_LICENSES.md README.md README.ja.md README.sc.md README.de.md README.fr.md README.es.md README.it.md CHANGELOG.md "$root/"
 install -m644 "contrib/$name.service" "contrib/$name.desktop" contrib/config.example.json "$root/contrib/"
 install -m644 contrib/icons/*.png "$root/contrib/icons/"
 install -m644 contrib/wireplumber/* "$root/contrib/wireplumber/"
