@@ -6,7 +6,7 @@ Un panneau du tableau de bord SteamVR pour le Steam Frame, qui bascule l'annulat
 
 | Rapide (préréglages) | Réglage fin |
 |---|---|
-| ![L'onglet Rapide](docs/v11-en-quick-speaker_2026-10-10_17-49-17.png) | ![L'onglet Réglage fin](docs/v11-en-fine_2026-10-10_17-49-17.png) |
+| ![L'onglet Rapide](docs/v12-en-quick-speaker_2026-10-18_19-50-00.png) | ![L'onglet Réglage fin](docs/v12-en-fine_2026-10-18_19-50-00.png) |
 
 ### Vidéo de démo (avec le son)
 

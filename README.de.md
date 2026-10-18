@@ -6,7 +6,7 @@ Ein SteamVR-Dashboard für das Steam Frame, mit dem du Echofilter und Rauschfilt
 
 | Schnell (Presets) | Feinjustierung |
 |---|---|
-| ![Der Tab Schnell](docs/v11-en-quick-speaker_2026-10-10_17-49-17.png) | ![Der Tab Feinjustierung](docs/v11-en-fine_2026-10-10_17-49-17.png) |
+| ![Der Tab Schnell](docs/v12-en-quick-speaker_2026-10-18_19-50-00.png) | ![Der Tab Feinjustierung](docs/v12-en-fine_2026-10-18_19-50-00.png) |
 
 ### Demovideo (mit Ton)
 

@@ -6,7 +6,7 @@ Un pannello della dashboard di SteamVR per Steam Frame che cambia la cancellazio
 
 | Rapido (preimpostazioni) | Regolazione fine |
 |---|---|
-| ![La scheda Rapido](docs/v11-en-quick-speaker_2026-10-10_17-49-17.png) | ![La scheda Regolazione fine](docs/v11-en-fine_2026-10-10_17-49-17.png) |
+| ![La scheda Rapido](docs/v12-en-quick-speaker_2026-10-18_19-50-00.png) | ![La scheda Regolazione fine](docs/v12-en-fine_2026-10-18_19-50-00.png) |
 
 ### Video dimostrativo (con audio)
 

@@ -72,7 +72,7 @@ SteamVR のダッシュボードの下の並びに「Mic」のアイコン（マ
 | 外付けのマイクのとき（タブの中身の代わり） | **Frame 内蔵マイクに戻す** | 「いまは <マイク> を使っています」、処理がかかるのは内蔵マイクだけという説明、「<出口> のときの設定（<まとめ>）は、内蔵マイクに戻すと使います」。ボタンは内蔵マイクを既定のマイクにする（下の「既定の切り替え」） |
 | つながり（左のカードの下の暗い箱） | （表示だけ） | 「マイク ─ 音質補正 ─ エコー除去 ─ ノイズ除去 ─ アプリへ」。実際に通っている段はピンクの薄い塗り＋実線の枠＋太字、通っていない段は点線の枠＋細字。段と段の線は、両側が通っていればピンクの実線、ほかは点線（見本のとおり。前の「下を回って飛ばす線」はやめた）。外付けのマイクのときは最初の段をそのマイクの短い名前にして、処理の段はすべて通っていない形。未使用・読めないときは「つながり」の右に説明 |
 | 声のチェック | ● 録音 / ■ 停止、履歴の ▶ / ■ | アプリに届く音を最大 10 秒録って、5 件まで聞き比べる（下の「声のチェック」）。履歴の 2 行目は録ったときの出口と設定（「AB13X・エコー除去オフ」「スピーカー・エコー除去オン・ノイズ除去オン 10%/800ms」）か、外付けのマイクなら「AB13X のマイク（処理なし）」 |
-| 下の 1 行（frame-ui の `drawFooter`） | 日本語 / English / 简体中文、SteamVR と一緒に起動 オン / オフ、終了 | 言語はすぐ切り替えて保存。自動起動は `systemctl --user enable` / `disable`（下の「自動起動」。ユニットが無いときは押せず「準備されていません」）。終了は 3 秒以内の 2 回目で終了（終了コード 3）。いちばん下の注意書きは、失敗（赤）があればそれ、無ければ自動起動が使えない理由、どちらも無ければ「押すとすぐ切り替わり、音の出口ごとに覚えます。録音はメモリの中だけで、終了すると消えます」 |
+| 下の 1 行（このアプリで描く。frame-ui の `drawFooter` は 3 言語なので使わない） | 言語の一覧（日本語 / English / 简体中文 / Deutsch / Français / Español / Italiano）、SteamVR と一緒に起動 オン / オフ、終了 | 言語は一覧で選ぶとすぐ切り替えて保存。自動起動は `systemctl --user enable` / `disable`（下の「自動起動」。ユニットが無いときは押せず「準備されていません」）。終了は 3 秒以内の 2 回目で終了（終了コード 3）。いちばん下の注意書きは、失敗（赤）があればそれ、無ければ自動起動が使えない理由、どちらも無ければ「押すとすぐ切り替わり、音の出口ごとに覚えます。録音はメモリの中だけで、終了すると消えます」 |
 
 重ねて出す画面（後ろを暗くし、後ろのボタンは押せない。右上の ✕ で閉じる）:
 
@@ -284,9 +284,9 @@ ssh steamos@<headset-ip> 'cd ~/frame-mic-tuner && cmake -G Ninja -S . -B build &
 ./build/frame-mic-tuner --set-ns-vad 10 --set-ns-grace 800   # ノイズ除去の強さをその場でかけてから表示（保存はしない）
 ./build/frame-mic-tuner --dump-png out/panel-ja_2026-09-27_00-00-00.png --language ja
 ./build/frame-mic-tuner --dump-png out/panel-en-error_2026-09-27_00-00-00.png --language en --fake-error write --fake-autostart missing
-# README のスクリーンショット（docs/v11-*.png。ja・en それぞれ「かんたん」と「細かく調整」の 4 枚）。ダミーの値で、アプリと更新の点を消すため --fake-aux running
-./build/frame-mic-tuner --dump-png out/v11-ja-quick-speaker_2026-10-10_17-49-17.png --language ja --fake --fake-output speaker --fake-echo on --fake-ns off --fake-history 5 --fake-playing 2 --fake-update uptodate --fake-aux running --tab quick
-./build/frame-mic-tuner --dump-png out/v11-ja-fine_2026-10-10_17-49-17.png --language ja --fake --fake-output speaker --fake-echo on --fake-ns on --fake-ns-vad 10 --fake-ns-grace 800 --fake-history 5 --fake-playing 3 --fake-update uptodate --fake-aux running --tab fine
+# README のスクリーンショット（docs/v12-*.png。1400×788。ja・en それぞれ「かんたん」と「細かく調整」の 4 枚）。ダミーの値で、アプリと更新の点を消すため --fake-aux running
+./build/frame-mic-tuner --dump-png out/v12-ja-quick-speaker_2026-10-18_19-50-00.png --language ja --fake --fake-output speaker --fake-echo on --fake-ns off --fake-history 5 --fake-playing 2 --fake-update uptodate --fake-aux running --tab quick
+./build/frame-mic-tuner --dump-png out/v12-ja-fine_2026-10-18_19-50-00.png --language ja --fake --fake-output speaker --fake-echo on --fake-ns on --fake-ns-vad 10 --fake-ns-grace 800 --fake-history 5 --fake-playing 3 --fake-update uptodate --fake-aux running --tab fine
 ./build/frame-mic-tuner --thumbnail-png out/thumbnail_2026-09-27_00-00-00.png --thumbnail-size 256
 ./build/frame-mic-tuner --test-record 3          # 3 秒録音 → 長さとピーク → メモリから再生
 ./build/frame-mic-tuner --contrast-report        # 色の組み合わせごとのコントラスト比と合否

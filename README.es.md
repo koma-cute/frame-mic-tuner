@@ -6,7 +6,7 @@ Un panel del panel de SteamVR para Steam Frame que cambia la cancelación de eco
 
 | Rápido (preajustes) | Ajuste fino |
 |---|---|
-| ![La pestaña Rápido](docs/v11-en-quick-speaker_2026-10-10_17-49-17.png) | ![La pestaña Ajuste fino](docs/v11-en-fine_2026-10-10_17-49-17.png) |
+| ![La pestaña Rápido](docs/v12-en-quick-speaker_2026-10-18_19-50-00.png) | ![La pestaña Ajuste fino](docs/v12-en-fine_2026-10-18_19-50-00.png) |
 
 ### Vídeo de demostración (con sonido)
 

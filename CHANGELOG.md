@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.3.2 (2026-10-18)
 
+- German, French, Spanish and Italian UI (thanks to @marcus-universe, #4). The language switch at the bottom left is now a menu with all seven languages: 日本語, English, 简体中文, Deutsch, Français, Español, Italiano. On first start the panel follows Steam's language (`german`, `french`, `spanish` or `latam`, `italian`), then the system locale; the settings file and `--language` take `"de"`, `"fr"`, `"es"`, `"it"`. The README is also available in these languages and in Simplified Chinese. Long labels in the new languages wrap to two lines or use shorter wording instead of being cut off. The update box and the list of the author's apps come from shared code that only has Japanese, English and Simplified Chinese, so they stay in English in the new languages. The language icon is from Heroicons (MIT, see `THIRD_PARTY_LICENSES.md`).
 - Wider panel: 1400×788 instead of 1200×788 (close to 16:9), shown about 3.27 m wide in the dashboard so everything stays the same size (same pixels per meter as before). The extra width goes to both columns: the output picker, the presets and Fine-tune rows get more room, so most labels that were wrapped or shrunk in French, Spanish and Italian now fit on one line at the normal size, and the voice check history shows more of each recording's settings. The pickers, the app list and the dialogs use the new width too; buttons whose label doesn't fit in some languages (Default, Open in Konsole, the installer button, the picker buttons) grow instead of shrinking the text.
 
 ## 0.3.1 (2026-10-17)

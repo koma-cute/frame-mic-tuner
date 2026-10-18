@@ -6,7 +6,7 @@ A SteamVR dashboard panel for the Steam Frame that switches the headset micropho
 
 | Quick (presets) | Fine-tune |
 |---|---|
-| ![The Quick tab](docs/v11-en-quick-speaker_2026-10-10_17-49-17.png) | ![The Fine-tune tab](docs/v11-en-fine_2026-10-10_17-49-17.png) |
+| ![The Quick tab](docs/v12-en-quick-speaker_2026-10-18_19-50-00.png) | ![The Fine-tune tab](docs/v12-en-fine_2026-10-18_19-50-00.png) |
 
 ### Demo video (with sound)
 
