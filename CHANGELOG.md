@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Wider panel: 1400×788 instead of 1200×788 (close to 16:9), shown about 3.27 m wide in the dashboard so everything stays the same size (same pixels per meter as before). The extra width goes to both columns: the output picker, the presets and Fine-tune rows get more room, so most labels that were wrapped or shrunk in French, Spanish and Italian now fit on one line at the normal size, and the voice check history shows more of each recording's settings. The pickers, the app list and the dialogs use the new width too; buttons whose label doesn't fit in some languages (Default, Open in Konsole, the installer button, the picker buttons) grow instead of shrinking the text.
+
 ## 0.3.1 (2026-10-17)
 
 - Smaller and a little faster (thanks to @cinnacappu, #3): Release builds use link-time optimization when supported and drop unused code and data (the stripped executable is about 20% smaller), and the panel's Cairo-to-RGBA conversion skips the lookup table for fully opaque or fully transparent pixels (about half the time for an opaque panel on a Frame). The picture is unchanged. `ctest` runs `--self-test` and a new pixel-conversion test (`tests/rgba_test.cpp`); tests are not built for release packages.
