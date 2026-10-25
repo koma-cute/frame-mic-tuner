@@ -2,7 +2,7 @@
 
 ## 0.3.3 (2026-10-25)
 
-- Fix: noise suppression strength jumped back to SteamOS's default (23% / 500 ms) and that default was saved for the current output. Since a recent SteamOS update (PipeWire 1.6), a value written to the noise suppressor before anything has used the mic since the headset started is kept by PipeWire and applied once the mic is used, but reading it back still shows the old value. The app took that old value for a change made in the panel. Now, when the value read right after writing is still the old one, the app shows and keeps the value it wrote, and goes back to what it reads once the reading changes (the mic is used, or the noise suppressor is set up again). If your saved strength was reset, set it once more after updating.
+- Fix: noise suppression strength jumped back to SteamOS's default (23% / 500 ms) and that default was saved for the current output. With PipeWire 1.6 (seen on the current SteamOS beta), a value written to the noise suppressor before anything has used the mic since the headset started is kept by PipeWire and applied once the mic is used, but reading it back still shows the old value. The app took that old value for a change made in the panel. Now, when the value read right after writing is still the old one, the app shows and keeps the value it wrote, and goes back to what it reads once the reading changes (the mic is used, or the noise suppressor is set up again). If your saved strength was reset, set it once more after updating.
 
 ## 0.3.2 (2026-10-18)
 
