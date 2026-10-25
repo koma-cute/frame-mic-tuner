@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3 (2026-10-25)
+
+- Fix: noise suppression strength jumped back to SteamOS's default (23% / 500 ms) and that default was saved for the current output. Since a recent SteamOS update (PipeWire 1.6), a value written to the noise suppressor before anything has used the mic since the headset started is kept by PipeWire and applied once the mic is used, but reading it back still shows the old value. The app took that old value for a change made in the panel. Now, when the value read right after writing is still the old one, the app shows and keeps the value it wrote, and goes back to what it reads once the reading changes (the mic is used, or the noise suppressor is set up again). If your saved strength was reset, set it once more after updating.
+
 ## 0.3.2 (2026-10-18)
 
 - German, French, Spanish and Italian UI (thanks to @marcus-universe, #4). The language switch at the bottom left is now a menu with all seven languages: 日本語, English, 简体中文, Deutsch, Français, Español, Italiano. On first start the panel follows Steam's language (`german`, `french`, `spanish` or `latam`, `italian`), then the system locale; the settings file and `--language` take `"de"`, `"fr"`, `"es"`, `"it"`. The README is also available in these languages and in Simplified Chinese. Long labels in the new languages wrap to two lines or use shorter wording instead of being cut off. The update box and the list of the author's apps come from shared code that only has Japanese, English and Simplified Chinese, so they stay in English in the new languages. The language icon is from Heroicons (MIT, see `THIRD_PARTY_LICENSES.md`).

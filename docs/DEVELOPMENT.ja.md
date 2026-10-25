@@ -194,6 +194,7 @@ Frame（2026-10-10、AB13X USB Audio の USB-C 変換をつないだ状態）の
 - 送り先は `ns_capture`（filter-chain の入口のノード）。`ns_source` の Props には control は無い（2026-09-27 に `pw-cli enum-params <id> PropInfo` / `Props` で確認）
 - 読む: `pw-dump ns_capture`（1 回で id と値が取れる。約 40ms）の `info.params.Props[].params`（`[名前, 値, 名前, 値, ...]`）
 - 書く: `pw-cli set-param <id> Props '{ params = [ "noise_suppressor_mono:VAD Threshold (%)" 23.0 "noise_suppressor_mono:VAD Grace Period (ms)" 500.0 ] }'`。fork＋execvp・シェルなしで、数値はアプリで範囲に丸めて（1% / 10ms 単位）から文字列にする。2 つはいつもまとめて送る
+- PipeWire 1.6（SteamOS 20261022 で確認）: 起動してから一度も動いていない filter-chain に書くと、値は覚えるだけで（filter-graph の `control_current`。インスタンスがまだ 0 個なので Props が変わった知らせを出さない）、読み返しは前の値のまま。マイクを使い始めると覚えた値がかかり、読み返しにも出る。そこでワーカーは、書いた直後の読み返しが前の値のままなら「隠れた書き込み」（`NsHiddenWrite`）として覚え、その前の値を読んでいる間はかけたい値を出す。読み返しが前の値でも書いた値でもなくなったら（ほかから変えた・ノードが作り直された）、読んだ値に戻す
 - 同じ PropInfo に `Retroactive VAD Grace (ms)`（0〜200、SteamOS は 0）もあるが、画面には出していない
 - SteamOS は PipeWire の起動のたびに filter-chain の設定の値（23 / 500）に戻す。そこで、アプリの `config.json` に音の出口ごとに保存して（`outputs` の各出口の `ns_vad_threshold_percent`・`ns_vad_grace_ms`。上の「音の出口ごとの設定」）、出口が変わったときと、次のときにかけ直す:
   - アプリが起動したとき（ワーカーがノードを探し、見つかるまで 5 秒おきに試す。かけたら止まる。パネルを閉じていても、この起動直後の分だけは動く）
