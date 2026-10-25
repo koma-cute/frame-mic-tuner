@@ -251,6 +251,7 @@ void MicWorker::run() {
                 if (!isNsParams) appliedNodeId_ = -1;
             }
             const MicState before = state_;
+            const NsHiddenWrite hidden = hiddenNs_;
             lock.unlock();
             if (command.kind == MicCommand::Kind::ApplySettings) {
                 // 出口の設定: エコー除去 → ノイズ除去 → 強さの順に書き、書き終わってから 1 回だけ読み直す
@@ -270,9 +271,7 @@ void MicWorker::run() {
                 if (command.withNsParams) {
                     const NsParams now = readNsParams();
                     if (now.nodeKnown) {
-                        const bool same = now.vadKnown && now.graceKnown && std::fabs(now.vad - command.vad) < 0.5 &&
-                                          std::fabs(now.grace - command.grace) < 0.5;
-                        if (skip && same) {
+                        if (!needNsWrite(now, command.vad, command.grace, skip, hidden)) {
                             appliedNode = now.nodeId;
                         } else {
                             paramsOk = writeNsParams(now.nodeId, command.vad, command.grace);

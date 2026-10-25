@@ -408,6 +408,12 @@ void showHiddenNs(NsParams& read, NsHiddenWrite& hidden, double vad, double grac
     }
 }
 
+bool needNsWrite(const NsParams& now, double vad, double grace, bool onlyIfChanged, const NsHiddenWrite& hidden) {
+    if (!onlyIfChanged) return true;
+    if (hidden.nodeId >= 0 && hidden.nodeId == now.nodeId) return true;
+    return !sameNsValues(now, clampNsVad(vad), clampNsGrace(grace));
+}
+
 bool writeSetting(const char* key, bool value) {
     const std::vector<std::string> argv = {"wpctl", "settings", "--save", key, value ? "true" : "false"};
     const CommandResult result = runCommand(argv);

@@ -214,6 +214,18 @@ NsHiddenWrite noteNsWrite(const NsParams& read, int nodeId, double vad, double g
 void showHiddenNs(NsParams& read, NsHiddenWrite& hidden, double vad, double grace);
 
 /**
+ * 出口の設定をかけるときに、ノイズ除去の強さを書くか。今と同じなら書かない。ただし書いた値が隠れているノードには、
+ * 読み返し（前の値）が同じでも必ず書く（PipeWire が覚えているのは別の値かもしれない）。
+ * @param now 今読んだ値（生の読み返し）
+ * @param vad かける判定の厳しさ（%）
+ * @param grace かける余韻（ms）
+ * @param onlyIfChanged 今と同じものは書かないか
+ * @param hidden 隠れている印
+ * @return 書くなら true
+ */
+bool needNsWrite(const NsParams& now, double vad, double grace, bool onlyIfChanged, const NsHiddenWrite& hidden);
+
+/**
  * 設定・つながり・ミュート・自動起動・ノイズ除去の強さをまとめて読む（外部コマンドを最大 6 回呼ぶ。1 回 10〜40ms 程度）。
  * @param withAutostart 自動起動の状態も読むか（false なら autostart は Unknown のまま）
  * @return 読んだ状態（writeError は None）

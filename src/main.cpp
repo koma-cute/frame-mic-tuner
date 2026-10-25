@@ -1257,6 +1257,10 @@ int runSelfTest() {
         read.nodeId = 54;
         showHiddenNs(read, hidden, 5, 70);
         expect("隠れた書き込み: ノードが作り直されたら、印を消す", read.vad == 23.0 && hidden.nodeId < 0);
+        expect("出口の設定をかける: 今と同じ強さなら書かない", !needNsWrite(params, 23, 500, true, hidden));
+        hidden = noteNsWrite(params, 53, 5, 70);
+        expect("出口の設定をかける: 書いた値が隠れているノードには、読み返しと同じ強さでも書く",
+               needNsWrite(params, 23, 500, true, hidden));
     }
 
     // wpctl get-volume @DEFAULT_AUDIO_SOURCE@ の出力（ミュート）
