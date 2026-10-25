@@ -373,6 +373,41 @@ bool writeNsParams(int nodeId, double vad, double grace) {
     return result.ok();
 }
 
+namespace {
+
+/**
+ * 読んだ値が、その判定の厳しさと余韻と同じか（1% / 10ms 単位に丸めた値どうし）。
+ */
+bool sameNsValues(const NsParams& read, double vad, double grace) {
+    return read.vadKnown && read.graceKnown && std::fabs(read.vad - vad) < 0.5 && std::fabs(read.grace - grace) < 0.5;
+}
+
+}  // namespace
+
+NsHiddenWrite noteNsWrite(const NsParams& read, int nodeId, double vad, double grace) {
+    NsHiddenWrite hidden;
+    if (!read.nodeKnown || read.nodeId != nodeId || !read.vadKnown || !read.graceKnown) return hidden;
+    if (sameNsValues(read, clampNsVad(vad), clampNsGrace(grace))) return hidden;
+    hidden.nodeId = nodeId;
+    hidden.staleVad = read.vad;
+    hidden.staleGrace = read.grace;
+    return hidden;
+}
+
+void showHiddenNs(NsParams& read, NsHiddenWrite& hidden, double vad, double grace) {
+    if (hidden.nodeId < 0) return;
+    if (!read.nodeKnown || read.nodeId != hidden.nodeId) {
+        hidden = NsHiddenWrite();
+        return;
+    }
+    if (sameNsValues(read, hidden.staleVad, hidden.staleGrace)) {
+        read.vad = clampNsVad(vad);
+        read.grace = clampNsGrace(grace);
+    } else if (!sameNsValues(read, clampNsVad(vad), clampNsGrace(grace))) {
+        hidden = NsHiddenWrite();
+    }
+}
+
 bool writeSetting(const char* key, bool value) {
     const std::vector<std::string> argv = {"wpctl", "settings", "--save", key, value ? "true" : "false"};
     const CommandResult result = runCommand(argv);

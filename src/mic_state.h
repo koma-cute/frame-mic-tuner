@@ -184,6 +184,36 @@ NsParams readNsParams();
 bool writeNsParams(int nodeId, double vad, double grace);
 
 /**
+ * 書いた値が読み返しにまだ出ていないノイズ除去の段。PipeWire 1.6 は、起動してから一度も動いていない
+ * フィルターに書いた値を覚えるだけで、読み返し（pw-dump の Props）は前の値のまま。マイクを使い始めると、覚えた値が効いて読み返しにも出る。
+ */
+struct NsHiddenWrite {
+    int nodeId = -1;          ///< そのノードの id（-1 = 隠れていない）
+    double staleVad = 0.0;    ///< 読み返しに出ている前の値
+    double staleGrace = 0.0;
+};
+
+/**
+ * 書いた直後に読んだ値から、書いた値が隠れているかを決める。
+ * @param read 書いた直後に読んだ値
+ * @param nodeId 書いたノードの id
+ * @param vad 書いた判定の厳しさ（%）
+ * @param grace 書いた余韻（ms）
+ * @return 隠れていればそのノードと前の値（読み返しが書いた値と同じなら nodeId = -1）
+ */
+NsHiddenWrite noteNsWrite(const NsParams& read, int nodeId, double vad, double grace);
+
+/**
+ * 隠れている書いた値を、読んだ前の値の代わりに見せる。読んだ値が前の値でも書いた値でもない
+ * （ほかから変えた・ノードが作り直された）ときは、隠れている印を消す。
+ * @param read 読んだ値（前の値なら書いた値に置き換える）
+ * @param hidden 隠れている印
+ * @param vad 書いた判定の厳しさ（%）
+ * @param grace 書いた余韻（ms）
+ */
+void showHiddenNs(NsParams& read, NsHiddenWrite& hidden, double vad, double grace);
+
+/**
  * 設定・つながり・ミュート・自動起動・ノイズ除去の強さをまとめて読む（外部コマンドを最大 6 回呼ぶ。1 回 10〜40ms 程度）。
  * @param withAutostart 自動起動の状態も読むか（false なら autostart は Unknown のまま）
  * @return 読んだ状態（writeError は None）

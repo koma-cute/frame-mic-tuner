@@ -142,6 +142,7 @@ private:
     double desiredVad_ = kNsVadDefault;
     double desiredGrace_ = kNsGraceDefault;
     int appliedNodeId_ = -1;      ///< かけたい値を最後にかけたノードの id（-1 = まだ）
+    NsHiddenWrite hiddenNs_;      ///< 書いた値が読み返しにまだ出ていない（PipeWire 1.6。読み返しの代わりにかけたい値を見せる）
     uint64_t requested_ = 0;      ///< 受け付けた書き込みの数
     uint64_t completed_ = 0;      ///< 終わった書き込みの数（捨てた分も含む）
 

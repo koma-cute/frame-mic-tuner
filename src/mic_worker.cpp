@@ -174,10 +174,36 @@ void MicWorker::run() {
      * 読んだ状態を覚える（mutex を持って呼ぶ）。画面に出す中身が変わったときだけ番号を進めて、描き直させる。
      */
     const auto store = [this](MicState fresh) {
+        if (hasDesiredNs_ && hiddenNs_.nodeId >= 0) {
+            const int hiddenNode = hiddenNs_.nodeId;
+            showHiddenNs(fresh.nsParams, hiddenNs_, desiredVad_, desiredGrace_);
+            if (hiddenNs_.nodeId < 0) {
+                std::fprintf(stderr, "[ノイズ除去] ノード %d の読み返しが変わったので、読んだ値を出します\n", hiddenNode);
+            }
+        }
         fresh.writesDone = completed_;
         fresh.nsApplied = !hasDesiredNs_ || (fresh.nsParams.nodeKnown && appliedNodeId_ == fresh.nsParams.nodeId);
         if (!sameMicState(fresh, state_)) ++version_;
         state_ = fresh;
+    };
+    /**
+     * 書いた直後に読んだ値で、書いた値が隠れているかを覚える（mutex を持って呼ぶ）。
+     * @param read 書いた直後に読んだ値
+     * @param nodeId 書いたノードの id
+     * @param vad 書いた判定の厳しさ（%）
+     * @param grace 書いた余韻（ms）
+     */
+    const auto noteWrite = [this](const NsParams& read, int nodeId, double vad, double grace) {
+        const bool wasHidden = hiddenNs_.nodeId >= 0 && hiddenNs_.nodeId == nodeId;
+        const NsHiddenWrite hidden = noteNsWrite(read, nodeId, vad, grace);
+        // 隠れたままもう一度書いた（バーを動かしている途中）ときは、最初に見た前の値を持ち続ける
+        if (!(wasHidden && hidden.nodeId >= 0)) hiddenNs_ = hidden;
+        if (hidden.nodeId >= 0 && !wasHidden) {
+            std::fprintf(stderr,
+                         "[ノイズ除去] ノード %d の読み返しが前の値（%.0f%% / %.0fms）のままです。PipeWire はマイクを使い始めると"
+                         "書いた値をかけるので、それまでは書いた値を出します\n",
+                         nodeId, hidden.staleVad, hidden.staleGrace);
+        }
     };
     /**
      * かけたい値があり、ノードがまだかけていないもの（見つかったばかり・作り直された）なら、かけて読み直す。
@@ -185,7 +211,7 @@ void MicWorker::run() {
      * @param params 読んだばかりのノイズ除去の値（かけたら読み直した値に置き換える）
      * @param lock 持っている mutex
      */
-    const auto applyDesiredIfNeeded = [this](NsParams& params, std::unique_lock<std::mutex>& lock) {
+    const auto applyDesiredIfNeeded = [this, &noteWrite](NsParams& params, std::unique_lock<std::mutex>& lock) {
         if (!hasDesiredNs_ || !params.nodeKnown || params.nodeId == appliedNodeId_) return;
         const int nodeId = params.nodeId;
         const double vad = desiredVad_;
@@ -195,7 +221,10 @@ void MicWorker::run() {
         const bool ok = writeNsParams(nodeId, vad, grace);
         NsParams fresh = ok ? readNsParams() : params;
         lock.lock();
-        if (ok) appliedNodeId_ = nodeId;
+        if (ok) {
+            appliedNodeId_ = nodeId;
+            noteWrite(fresh, nodeId, vad, grace);
+        }
         params = fresh;
     };
 
@@ -231,6 +260,7 @@ void MicWorker::run() {
                 bool nsOk = true;
                 bool paramsOk = true;
                 int appliedNode = -1;
+                bool wroteParams = false;
                 if (!skip || !before.echoKnown || before.echo != command.value) {
                     echoOk = writeSetting(kEchoCancelKey, command.value);
                 }
@@ -247,6 +277,7 @@ void MicWorker::run() {
                         } else {
                             paramsOk = writeNsParams(now.nodeId, command.vad, command.grace);
                             if (paramsOk) appliedNode = now.nodeId;
+                            wroteParams = paramsOk;
                         }
                     }
                     // ノードがまだ無いときは、見つかりしだいかける（起動直後の 5 秒おきの試し）
@@ -255,6 +286,7 @@ void MicWorker::run() {
                 fresh.devices = before.devices;
                 lock.lock();
                 if (appliedNode >= 0) appliedNodeId_ = appliedNode;
+                if (wroteParams) noteWrite(fresh.nsParams, appliedNode, command.vad, command.grace);
                 if (echoOk && nsOk) {
                     fresh.writeError = paramsOk ? MicError::None : MicError::WriteNsParams;
                 } else if (!echoOk && !nsOk) {
@@ -282,7 +314,10 @@ void MicWorker::run() {
                 fresh.devices = isDefault ? readDevicesWithFallback() : before.devices;
             }
             lock.lock();
-            if (isNsParams && ok && fresh.nsParams.nodeKnown) appliedNodeId_ = fresh.nsParams.nodeId;
+            if (isNsParams && ok && fresh.nsParams.nodeKnown) {
+                appliedNodeId_ = fresh.nsParams.nodeId;
+                noteWrite(fresh.nsParams, nodeId >= 0 ? nodeId : fresh.nsParams.nodeId, command.vad, command.grace);
+            }
             if (ok) {
                 fresh.writeError = MicError::None;
             } else {

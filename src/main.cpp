@@ -1236,6 +1236,28 @@ int runSelfTest() {
                params.grace == 500.0);
     expect("ノイズ除去の強さ: 範囲外を丸める（150% → 99%、-5ms → 0ms、512ms → 510ms）",
            clampNsVad(150) == 99.0 && clampNsGrace(-5) == 0.0 && clampNsGrace(512) == 510.0);
+    {
+        // PipeWire 1.6: 一度も動いていないフィルターに書くと、読み返しは前の値（23% / 500ms）のまま
+        NsHiddenWrite hidden = noteNsWrite(params, 53, 5, 70);
+        expect("隠れた書き込み: 書いた直後の読み返しが前の値なら、隠れていると覚える",
+               hidden.nodeId == 53 && hidden.staleVad == 23.0 && hidden.staleGrace == 500.0);
+        expect("隠れた書き込み: 読み返しが書いた値と同じなら、隠れていない", noteNsWrite(params, 53, 23, 500).nodeId < 0);
+        NsParams read = params;
+        showHiddenNs(read, hidden, 5, 70);
+        expect("隠れた書き込み: 前の値を読んだら、書いた値を見せる",
+               read.vad == 5.0 && read.grace == 70.0 && hidden.nodeId == 53);
+        showHiddenNs(read, hidden, 5, 70);
+        expect("隠れた書き込み: 書いた値を読んだら（見せた値の写し・マイクを使い始めた）、そのまま", hidden.nodeId == 53);
+        read = params;
+        read.vad = 40.0;
+        showHiddenNs(read, hidden, 5, 70);
+        expect("隠れた書き込み: ほかの値を読んだら、読んだ値を出して印を消す", read.vad == 40.0 && hidden.nodeId < 0);
+        hidden = noteNsWrite(params, 53, 5, 70);
+        read = params;
+        read.nodeId = 54;
+        showHiddenNs(read, hidden, 5, 70);
+        expect("隠れた書き込み: ノードが作り直されたら、印を消す", read.vad == 23.0 && hidden.nodeId < 0);
+    }
 
     // wpctl get-volume @DEFAULT_AUDIO_SOURCE@ の出力（ミュート）
     bool muted = true;
